@@ -16,7 +16,7 @@ namespace BackTrack
     
     public partial class BackTrack : Form
     {
-        //function import
+        //function import (setting up "CreateFile")
         [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern SafeFileHandle CreateFile(
                 string fileName,
@@ -34,28 +34,48 @@ namespace BackTrack
 
         private void ReadData_Click(object sender, EventArgs e)
         {
-            /*
-            hFile = CreateFile("\\\\.\\physicaldrive1",
-                    GENERIC_READ | FILE_SHARE_READ,
-                    0,
-                    OPEN_EXISTING,
-                    0,
-                    0);
+            //DriveInfo[] colDrives = DriveInfo.GetDrives();
 
-            //FileStream fileStream = new FileStream("\\\\.\\physicaldrive1", FileMode.Open);
+            byte[] sdAddr = new byte[32];
+            int intSdAddr = 0;
 
-
-            int[] buffer = new int[5000];
-            int i = 5000;
-            while(i>0)
+            //Read the current address, This tells us how many data "sets" we need to read
+            //we need the first 4 bytes (32-bits)
+            //ReadDrive("E:\\", 32);                    //This must be ran as admin
+            sdAddr = ReadDrive("\\\\.\\physicaldrive1", 32);     //this does not
+            for (int i = 0; i < 4; i++)
             {
-                i--;
-                buffer[i-1] = (int)fileStream.ReadByte();
+                intSdAddr = intSdAddr << 8;
+                intSdAddr += sdAddr[i];
             }
-            i = 50;
-            */
-            int sizeToRead = 512;
-            string FileName = "\\\\.\\physicaldrive1";
+
+            byte[] sdData = new byte[intSdAddr * 32];
+            char[] CharSdData = new char[intSdAddr * 32];
+
+            //read data from SD card
+            int bytesToRead = ((intSdAddr * 32) + 32);
+            sdData = ReadDrive("\\\\.\\physicaldrive1", bytesToRead);
+
+            for (int i = bytesToRead; i>32; i--)
+            {
+                CharSdData[bytesToRead - i] = (char)sdData[i-1];
+            }
+           // CharSdData.Reverse();
+            ;
+        }
+
+        private void clearSDCard_Click(object sender, EventArgs e)
+        {
+            //set up array of 0 bytes to clear address section of SD card
+            byte[] clearIndex = Enumerable.Repeat((byte)0x00, 32).ToArray();
+                //new byte[32];
+            //clearIndex[1] = 0x00;
+            writeToDisk("\\\\.\\physicaldrive1", clearIndex);
+        }
+
+        //function to read 
+        private static byte[] ReadDrive(string FileName, int sizeToRead)
+        {
 
             if ((sizeToRead < 1) || (sizeToRead == null))
                 throw new System.ArgumentException("Size parameter cannot be null or 0 or less than 0!");
@@ -75,11 +95,48 @@ namespace BackTrack
             }
 
             FileStream diskStreamToRead = new FileStream(drive, FileAccess.Read);
+
             byte[] buf = new byte[512];
-            diskStreamToRead.Read(buf, 0, 512);
+            //diskStreamToRead.Read(buf, 0, 512);
+
+            for(int i = 0; i < sizeToRead; i++)
+            {
+                buf[i] = (byte)diskStreamToRead.ReadByte();
+                //long temp = diskStreamToRead.Position;
+                diskStreamToRead.Seek((long)511, SeekOrigin.Current);
+            }
+
             try { diskStreamToRead.Close(); } catch { }
             try { drive.Close(); } catch { }
+            return buf;
+        }
 
+        //function to write
+        private void writeToDisk(string FileName, byte[] dataToWrite)
+        {
+            if (dataToWrite == null)
+                throw new System.ArgumentException("dataToWrite parameter cannot be null!");
+
+            SafeFileHandle drive = CreateFile(fileName: FileName,
+                             fileAccess: FileAccess.Write,
+                             fileShare: FileShare.Write | FileShare.Read | FileShare.Delete,
+                             securityAttributes: IntPtr.Zero,
+                             creationDisposition: FileMode.Open,
+                             flags: 4, //with this also an enum can be used. (as described above as EFileAttributes)
+                             template: IntPtr.Zero);
+
+            FileStream diskStreamToWrite = new FileStream(drive, FileAccess.Write);
+
+            //diskStreamToWrite.Write(dataToWrite, 0, dataToWrite.Length);
+            for (int i = 0; i < (dataToWrite.Length * 512); i++)
+            {
+                diskStreamToWrite.WriteByte(dataToWrite[i% dataToWrite.Length]);
+                //diskStreamToWrite.Seek((long)511, SeekOrigin.Current);    //cannot seek when writing
+                                                                            //to correct for this we write the same data 512 times
+            }
+
+            try { diskStreamToWrite.Close(); } catch { }
+            try { drive.Close(); } catch { }
         }
     }
 }

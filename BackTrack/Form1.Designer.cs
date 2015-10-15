@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.ReadData = new System.Windows.Forms.Button();
+            this.clearSDCard = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // ReadData
@@ -41,11 +42,22 @@
             this.ReadData.UseVisualStyleBackColor = true;
             this.ReadData.Click += new System.EventHandler(this.ReadData_Click);
             // 
+            // clearSDCard
+            // 
+            this.clearSDCard.Location = new System.Drawing.Point(182, 12);
+            this.clearSDCard.Name = "clearSDCard";
+            this.clearSDCard.Size = new System.Drawing.Size(90, 44);
+            this.clearSDCard.TabIndex = 1;
+            this.clearSDCard.Text = "Clear SD card";
+            this.clearSDCard.UseVisualStyleBackColor = true;
+            this.clearSDCard.Click += new System.EventHandler(this.clearSDCard_Click);
+            // 
             // BackTrack
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Controls.Add(this.clearSDCard);
             this.Controls.Add(this.ReadData);
             this.Name = "BackTrack";
             this.Text = "BackTrack - The Software!";
@@ -56,6 +68,7 @@
         #endregion
 
         private System.Windows.Forms.Button ReadData;
+        private System.Windows.Forms.Button clearSDCard;
     }
 }
 
