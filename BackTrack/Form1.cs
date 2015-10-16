@@ -114,9 +114,63 @@ namespace BackTrack
             LocPoint[] hike = new LocPoint[intSdAddr];
 
             //handle each location point
-            for(int i = 0; i < intSdAddr; i++)
+            for (int i = 0; i < intSdAddr; i++)
             {
-                hike[i].degreeNorthSouth = CharSdData[i*32];
+                char[] buffer = new char[7];
+                byte[] byteBuffer = new byte[7];
+                //put latatude degrees into struct in array
+                hike[i].degreeNorthSouth = (int)CharSdData[i * 32] - '0';
+                hike[i].degreeNorthSouth = hike[i].degreeNorthSouth * 10;
+                hike[i].degreeNorthSouth += (int)CharSdData[(i * 32) + 1] - '0';
+
+
+                //pull latatude minute data
+                Array.Copy(CharSdData, (i * 32) + 2, buffer, 0, 6);
+                string latString = new string(buffer);
+                hike[i].minuteNorthSouth = float.Parse(latString);
+
+                //pull N/S indicator
+                hike[i].northSouth = CharSdData[(i * 32) + 8];
+
+                //pull longitude degrees
+                hike[i].degreeEastWest = (int)CharSdData[(i * 32) + 9] - '0';
+                hike[i].degreeEastWest = hike[i].degreeEastWest * 10;
+                hike[i].degreeEastWest += (int)CharSdData[(i * 32) + 10] - '0';
+                hike[i].degreeEastWest = hike[i].degreeEastWest * 10;
+                hike[i].degreeEastWest += (int)CharSdData[(i * 32) + 11] - '0';
+
+                //pull Longitude minute data
+                Array.Copy(CharSdData, (i * 32) + 12, buffer, 0, 6);
+                string lonString = new string(buffer);
+                hike[i].minuteEastWest = float.Parse(lonString);
+
+                //pull E/W indicator
+                hike[i].eastWest = CharSdData[(i * 32) + 18];
+
+                //pull elevation data if any
+                Array.Copy(CharSdData, (i * 32) + 19, buffer, 0, 5);
+                buffer[5] = '\0';
+                if(buffer[0] == '?')        //if there is no elevation data
+                {
+                    hike[i].elevation = -1;     //put -1 for elevation
+                }
+                else                            //otherwise put the elevation
+                {
+                    hike[i].elevation = Convert.ToInt32(buffer);
+                }
+
+                //pull time
+                hike[i].capTime.hours = (int)CharSdData[(i * 32) + 24] - '0';       //hours
+                hike[i].capTime.hours = hike[i].capTime.hours * 10;
+                hike[i].capTime.hours += (int)CharSdData[(i * 32) + 25] - '0';
+
+                hike[i].capTime.minutes = (int)CharSdData[(i * 32) + 26] - '0';       //minutes
+                hike[i].capTime.minutes = hike[i].capTime.minutes * 10;
+                hike[i].capTime.minutes += (int)CharSdData[(i * 32) + 27] - '0';
+
+                hike[i].capTime.seconds = (int)CharSdData[(i * 32) + 28] - '0';       //seconds
+                hike[i].capTime.seconds = hike[i].capTime.seconds * 10;
+                hike[i].capTime.seconds += (int)CharSdData[(i * 32) + 29] - '0';
             }
         }
 
