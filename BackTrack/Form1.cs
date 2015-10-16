@@ -27,6 +27,54 @@ namespace BackTrack
                 int flags,
                 IntPtr template);
 
+        //struct so it's built on the stack
+        public struct time
+        {
+            public int hours;
+            public int minutes;
+            public int seconds;
+
+            //constructor
+            public time(int hour, int minute, int second)
+                {
+                    hours = hour;
+                    minutes = minute;
+                    seconds = second;
+                }
+        }
+
+        public struct LocPoint
+        {
+            public int degreeNorthSouth;
+            public float minuteNorthSouth;
+            public int degreeEastWest;
+            public float minuteEastWest;
+            public char northSouth;
+            public char eastWest;
+            public int elevation;
+            public time capTime;
+
+            //constructor
+            public LocPoint(int degreeNS, 
+                            float minuteNS,
+                            int degreeEW,
+                            float minuteEW,
+                            char NSIndicator,
+                            char EWIndicator,
+                            int initElevation,
+                            time locTime)
+            {
+                degreeNorthSouth = degreeNS;
+                minuteNorthSouth = minuteNS;
+                degreeEastWest = degreeEW;
+                minuteEastWest = minuteEW;
+                northSouth = NSIndicator;
+                eastWest = EWIndicator;
+                elevation = initElevation;
+                capTime = locTime;
+            }
+        }
+
         public BackTrack()
         {
             InitializeComponent();
@@ -60,8 +108,16 @@ namespace BackTrack
             {
                 CharSdData[bytesToRead - i] = (char)sdData[i-1];
             }
-           // CharSdData.Reverse();
-            ;
+            //CharSdData.Reverse();
+
+            //create an array of LocPoints (Location Points)
+            LocPoint[] hike = new LocPoint[intSdAddr];
+
+            //handle each location point
+            for(int i = 0; i < intSdAddr; i++)
+            {
+                hike[i].degreeNorthSouth = CharSdData[i*32];
+            }
         }
 
         private void clearSDCard_Click(object sender, EventArgs e)
