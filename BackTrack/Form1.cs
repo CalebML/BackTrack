@@ -55,6 +55,15 @@ namespace BackTrack
                     minutes = minute;
                     seconds = second;
                 }
+            
+            //override the ToString method to output data
+            public override string ToString()
+            {
+
+                return hours + ","
+                    + minutes + ","
+                    + seconds; ;
+            }
         }
 
         public struct LocPoint
@@ -67,6 +76,7 @@ namespace BackTrack
             public char eastWest;
             public int elevation;
             public time capTime;
+            public double distancedHiked;
 
             //constructor
             public LocPoint(int degreeNS, 
@@ -76,7 +86,8 @@ namespace BackTrack
                             char NSIndicator,
                             char EWIndicator,
                             int initElevation,
-                            time locTime)
+                            time locTime,
+                            double InitDistancedHiked)
             {
                 degreeNorthSouth = degreeNS;
                 minuteNorthSouth = minuteNS;
@@ -86,6 +97,23 @@ namespace BackTrack
                 eastWest = EWIndicator;
                 elevation = initElevation;
                 capTime = locTime;
+                distancedHiked = InitDistancedHiked;
+            }
+
+            //override the ToString method to output data
+            public override string ToString()
+            {
+
+                return degreeNorthSouth + ","
+                    + minuteNorthSouth + ","
+                    + northSouth + ","
+                    + degreeEastWest + ","
+                    + minuteEastWest + ","
+                    + eastWest + ","
+                    + elevation + ","
+                    + capTime + ","
+                    + distancedHiked;
+                    //base.ToString();
             }
         }
 
@@ -161,6 +189,9 @@ namespace BackTrack
 
         private void ReadData_Click(object sender, EventArgs e)
         {
+            //allow the user to save hikes
+            SaveHike.Enabled = true;
+
             //DriveInfo[] colDrives = DriveInfo.GetDrives();
 
             byte[] sdAddr = new byte[32];
@@ -172,6 +203,8 @@ namespace BackTrack
             //we need the first 4 bytes (32-bits)
             //ReadDrive("E:\\", 32);                    //This must be ran as admin
             //sdAddr = ReadDrive("\\\\.\\physicaldrive1", 32);     //this does not
+                //this workaround no longer works
+            bool error = false;
             sdAddr = ReadDrive(drive, 32);
             int shift = 5;
 
@@ -289,22 +322,14 @@ namespace BackTrack
 
             //keep track of where the map needs to show once the points are added
             double highLat = -100, lowLat = 100, highLon = -200, lowLon = 200;
+            //double lastLat = 0, lastLon = 0;
 
-            for (int i = 0; i < hike.Length; i++)
+            calcDistanceforPoints();
+
+            for (int i = hike.Length-1; i >= 0; i--)
             {
-                double lat = hike[i].degreeNorthSouth;
-                lat += (hike[i].minuteNorthSouth / 60);
-                if (hike[i].northSouth == 'S')
-                {
-                    lat = lat * -1;
-                }
-
-                double lon = hike[i].degreeEastWest;
-                lon += (hike[i].minuteEastWest / 60);
-                if (hike[i].eastWest == 'W')
-                {
-                    lon = lon * -1;
-                }
+                double lat = convertGpsToDouble(hike[i].degreeNorthSouth, hike[i].minuteNorthSouth, hike[i].northSouth);
+                double lon = convertGpsToDouble(hike[i].degreeEastWest, hike[i].minuteEastWest, hike[i].eastWest);
 
                 //modify high and low values
                 if (lat > highLat)
@@ -333,14 +358,69 @@ namespace BackTrack
                 //add "tool tips" and create marker
                 GMapMarker Marker = new GMap.NET.WindowsForms.Markers.GMarkerGoogle(pos, GMap.NET.WindowsForms.Markers.GMarkerGoogleType.green);
                 //Marker.ToolTip = new GMapToolTip(Marker);
+
+                //figure out distance hiked
+                ////double distanceHiked = 0;
+                //if( i != hike.Length - 1)
+                //{
+                //    lastLat = lat - lastLat;
+                //    if(lastLat < 0)
+                //    {
+                //        lastLat *= -1;
+                //    }
+                //    lastLon = lon - lastLon;
+                //    if(lastLon < 0)
+                //    {
+                //        lastLon *= -1;
+                //    }
+                //    //lastLat and lastLon hold the x and y distance traveled
+
+                //    lastLat *= lastLat;
+                //    lastLon *= lastLon;
+
+                //    hike[i].distancedHiked = Math.Sqrt(lastLat + lastLon);
+                    
+                //    //convert to kelometers
+                //    hike[i].distancedHiked *= (10000 / 90);
+
+                //    //add distance hoked before this point
+                //    hike[i].distancedHiked += hike[i + 1].distancedHiked;
+                //}
+                //else
+                //{
+                //    hike[i].distancedHiked = 0;
+                //}
+                //lastLat = lat;
+                //lastLon = lon;
+
+                //figure out time hiked
+                int hours, minutes, seconds;
+                seconds = (hike[i].capTime.seconds - hike[hike.Length-1].capTime.seconds);
+                minutes = (hike[i].capTime.minutes - hike[hike.Length-1].capTime.minutes);
+                hours = (hike[i].capTime.hours - hike[hike.Length-1].capTime.hours);
+                if (seconds < 0)
+                {
+                    seconds = seconds + 60;
+                    minutes--;
+                }
+                if(minutes < 0)
+                {
+                    minutes = minutes + 60;
+                    hours--;
+                }
+
+                //add tool tip
                 Marker.ToolTipText = "Point Number: " + (hike.Length - i)
                                         + "\nTime: " + hike[i].capTime.hours + ":" + hike[i].capTime.minutes + ":" + hike[i].capTime.seconds + " UTC"
-                                        + "\nTime Hiked: " //+ (hike[i].capTime.hours - hike[0].capTime.hours) + ":" + (hike[i].capTime.minutes - hike[0].capTime.minutes) + ":" + (hike[i].capTime.seconds - hike[0].capTime.seconds)
-                                        + "\nLatitude: " + hike[i].degreeNorthSouth + "º" + hike[i].minuteNorthSouth + "'" + hike[i].northSouth
-                                        + "\nLongitude: " + hike[i].degreeEastWest + "º" + hike[i].minuteEastWest + "'" + hike[i].eastWest;
+                                        + "\nTime Hiked: " + hours + ":" + minutes + ":" + seconds
+                                        //+ (hike[i].capTime.hours - hike[0].capTime.hours) + ":" + (hike[i].capTime.minutes - hike[0].capTime.minutes) + ":" + (hike[i].capTime.seconds - hike[0].capTime.seconds)
+                                        + "\nDistance Hiked: " + hike[i].distancedHiked.ToString("F") + " Km"
+                                        + "\nLatitude: " + hike[i].degreeNorthSouth + "º " + hike[i].minuteNorthSouth + "' " + hike[i].northSouth
+                                        + "\nLongitude: " + hike[i].degreeEastWest + "º " + hike[i].minuteEastWest + "' " + hike[i].eastWest;
 
-                //Marker.IsHitTestVisible = false;      //makes marker unclickable and tool tips wont show up
                 
+                //Marker.IsHitTestVisible = false;      //makes marker unclickable and tool tips wont show up
+                Marker.Tag = i;         //add a tag to identify the marker for later
 
                 Points.Markers.Add(Marker);
             }
@@ -352,6 +432,68 @@ namespace BackTrack
             //move the map
             MainMap.Position = new PointLatLng((highLat + lowLat)/2, (highLon + lowLon)/2);
 
+        }
+
+        private double convertGpsToDouble(int degrees, float minutes, char indicator)
+        {
+            double latLon = degrees;
+            latLon += (minutes / 60);
+            if ( (indicator == 'S') | (indicator == 'W') )
+            {
+                latLon = latLon * -1;
+            }
+
+            return latLon;
+        }
+
+        /******************************************
+        * Looks at all points in hike and calculates 
+        *   the distance that has been hiked so far
+        *   at each point
+        *
+        *******************************************/
+        private void calcDistanceforPoints()
+        {
+            double lastLat = 0, lastLon = 0;
+            double lat = 0, lon = 0;
+
+            for (int i = hike.Length - 1; i >= 0; i--)
+            {
+                lat = convertGpsToDouble(hike[i].degreeNorthSouth, hike[i].minuteNorthSouth, hike[i].northSouth);
+                lon = convertGpsToDouble(hike[i].degreeEastWest, hike[i].minuteEastWest, hike[i].eastWest);
+
+                if (i != hike.Length - 1)
+                {
+                    lastLat = lat - lastLat;
+                    if (lastLat < 0)
+                    {
+                        lastLat *= -1;
+                    }
+                    lastLon = lon - lastLon;
+                    if (lastLon < 0)
+                    {
+                        lastLon *= -1;
+                    }
+                    //lastLat and lastLon hold the x and y distance traveled
+
+                    lastLat *= lastLat;
+                    lastLon *= lastLon;
+
+                    hike[i].distancedHiked = Math.Sqrt(lastLat + lastLon);
+
+                    //convert to kelometers
+                    hike[i].distancedHiked *= (10000 / 90);
+
+                    //add distance hoked before this point
+                    hike[i].distancedHiked += hike[i + 1].distancedHiked;
+                }
+                else
+                {
+                    hike[i].distancedHiked = 0;
+                }
+                lastLat = lat;
+                lastLon = lon;
+            }
         }
 
         private void clearSDCard_Click(object sender, EventArgs e)
@@ -386,6 +528,7 @@ namespace BackTrack
             {
                 throw new IOException("Unable to access drive. Win32 Error Code " + Marshal.GetLastWin32Error());
                 //if get windows error code 5 this means access denied. You must try to run the program as admin privileges.
+
             }
 
             FileStream diskStreamToRead = new FileStream(drive, FileAccess.Read);
@@ -445,10 +588,80 @@ namespace BackTrack
                 MainMap.Zoom -= 1;
         }
 
+        //lastSelected is a global, it keeps track of the last markr clicked on
+        //-1 repersents none selected
+        static int lastSelected = -1;
+
+
         private void MarkerClick(object sender, EventArgs e)
         {
-            MainMap.BringToFront(); //for breakpoint
-            //Points.Markers.
+
+            GMapMarker Marker = (GMapMarker)sender;
+
+            if(lastSelected != -1)
+            {
+                //create new marker and find old selected marker
+                GMapMarker newLastMarker = new GMap.NET.WindowsForms.Markers.GMarkerGoogle(Points.Markers.ElementAt(lastSelected).Position, GMap.NET.WindowsForms.Markers.GMarkerGoogleType.green);
+                GMapMarker lastMarker = Points.Markers.ElementAt(lastSelected);
+
+                //copy data
+                newLastMarker.ToolTipText = lastMarker.ToolTipText;
+                newLastMarker.Tag = lastMarker.Tag;
+
+                //UN-highlight tooltip text
+                newLastMarker.ToolTipMode = MarkerTooltipMode.OnMouseOver;
+
+                //insert new marker and remove the old one
+                Points.Markers.Insert((int)lastMarker.Tag, newLastMarker);
+                Points.Markers.Remove(lastMarker);
+            }
+
+            if ((int)Marker.Tag != lastSelected)
+            {
+                //use Marker.Tag
+                GMapMarker newMarker = new GMap.NET.WindowsForms.Markers.GMarkerGoogle(Marker.Position, GMap.NET.WindowsForms.Markers.GMarkerGoogleType.blue_dot);
+                //Points.Markers.ElementAt((int)Marker.Tag);
+                newMarker.ToolTipText = Marker.ToolTipText;
+                newMarker.Tag = Marker.Tag;
+
+                //highlight tooltip text
+                newMarker.ToolTipMode = MarkerTooltipMode.Always;
+
+                //replace marker
+                Points.Markers.Insert((int)Marker.Tag, newMarker);
+                Points.Markers.Remove(Marker);
+
+                lastSelected = (int)newMarker.Tag;
+            }
+            else
+            {
+                lastSelected = -1;
+            }
+
+        }
+
+        private void SaveHike_Click(object sender, EventArgs e)
+        {
+            if (saveHikeDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Saves the Image via a FileStream created by the OpenFile method.
+                System.IO.FileStream fs =
+                   (System.IO.FileStream)saveHikeDialog.OpenFile();
+
+                for(int i = 0; i < hike.Length; i++)
+                {
+                    string saveVal = hike[i].ToString();
+                    fs.Write(Encoding.ASCII.GetBytes(saveVal), 0, saveVal.Length);
+                    fs.Write(Encoding.ASCII.GetBytes("\n"), 0, 1);
+                }
+
+                //var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                //binaryFormatter.Serialize(fs, hike);
+            }
+            else
+            {
+                //not a valid file
+            }
         }
     }
 }
