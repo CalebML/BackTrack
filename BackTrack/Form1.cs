@@ -788,5 +788,45 @@ namespace BackTrack
         {
             calcAvgSpeed();
         }
+
+        private void RemovePoint_Click(object sender, EventArgs e)
+        {
+            if(lastSelected != -1)
+            {
+                DialogResult dialogResult = MessageBox.Show("Are you sure you want to remove Point " + Convert.ToString(lastSelected + 1),
+                    "Warning",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+                if(dialogResult == DialogResult.Yes)
+                {
+                    //remove selected point
+                    bool pastPointBeingRemoved = false;
+                    LocPoint[] newHike = new LocPoint[hike.Length - 1];
+                    for (int i = 0; i < hike.Length; i++)
+                    {
+                        if ( (i != lastSelected) & (pastPointBeingRemoved == false) )
+                        {
+                            newHike[i] = hike[i];
+                        }
+                        else if (i == lastSelected)
+                        {
+                            pastPointBeingRemoved = true;
+                        }
+                        else
+                        {
+                            newHike[i - 1] = hike[i];
+                        }
+                    }
+                    
+                    //switch hike to newHike
+                    hike = newHike;
+                    ClearMap();
+                    AddPointsToMap();
+                    MainMap.Refresh();
+
+                }
+            }
+        }
     }
 }

@@ -182,10 +182,12 @@
             this.RemovePoint.TabIndex = 9;
             this.RemovePoint.Text = "Remove Point";
             this.RemovePoint.UseVisualStyleBackColor = true;
+            this.RemovePoint.Click += new System.EventHandler(this.RemovePoint_Click);
             // 
             // StartPoint
             // 
             this.StartPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartPoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.StartPoint.FormattingEnabled = true;
             this.StartPoint.Location = new System.Drawing.Point(538, 209);
             this.StartPoint.Name = "StartPoint";
@@ -196,6 +198,7 @@
             // EndPoint
             // 
             this.EndPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EndPoint.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.EndPoint.FormattingEnabled = true;
             this.EndPoint.Location = new System.Drawing.Point(538, 249);
             this.EndPoint.Name = "EndPoint";
@@ -235,6 +238,7 @@
             // 
             // KmHr
             // 
+            this.KmHr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.KmHr.AutoSize = true;
             this.KmHr.Checked = true;
             this.KmHr.Location = new System.Drawing.Point(537, 289);
@@ -248,12 +252,12 @@
             // 
             // FtMin
             // 
+            this.FtMin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.FtMin.AutoSize = true;
             this.FtMin.Location = new System.Drawing.Point(537, 312);
             this.FtMin.Name = "FtMin";
             this.FtMin.Size = new System.Drawing.Size(55, 17);
             this.FtMin.TabIndex = 16;
-            this.FtMin.TabStop = true;
             this.FtMin.Text = "Ft/min";
             this.FtMin.UseVisualStyleBackColor = true;
             // 
