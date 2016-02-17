@@ -38,6 +38,15 @@
             this.LoadHike = new System.Windows.Forms.Button();
             this.openHikeDialog = new System.Windows.Forms.OpenFileDialog();
             this.saveHikeDialog = new System.Windows.Forms.SaveFileDialog();
+            this.AddPoint = new System.Windows.Forms.Button();
+            this.RemovePoint = new System.Windows.Forms.Button();
+            this.StartPoint = new System.Windows.Forms.ComboBox();
+            this.EndPoint = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.AvgSpeed = new System.Windows.Forms.Label();
+            this.KmHr = new System.Windows.Forms.RadioButton();
+            this.FtMin = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // ReadData
@@ -85,7 +94,7 @@
             this.MainMap.ScaleMode = GMap.NET.WindowsForms.ScaleModes.Integer;
             this.MainMap.SelectedAreaFillColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(65)))), ((int)(((byte)(105)))), ((int)(((byte)(225)))));
             this.MainMap.ShowTileGridLines = false;
-            this.MainMap.Size = new System.Drawing.Size(552, 305);
+            this.MainMap.Size = new System.Drawing.Size(519, 305);
             this.MainMap.TabIndex = 2;
             this.MainMap.Zoom = 0D;
             // 
@@ -93,7 +102,7 @@
             // 
             this.ZoomIn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ZoomIn.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ZoomIn.Location = new System.Drawing.Point(445, 13);
+            this.ZoomIn.Location = new System.Drawing.Point(484, 13);
             this.ZoomIn.Name = "ZoomIn";
             this.ZoomIn.Size = new System.Drawing.Size(47, 43);
             this.ZoomIn.TabIndex = 3;
@@ -105,7 +114,7 @@
             // 
             this.ZoomOut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ZoomOut.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ZoomOut.Location = new System.Drawing.Point(499, 13);
+            this.ZoomOut.Location = new System.Drawing.Point(538, 13);
             this.ZoomOut.Name = "ZoomOut";
             this.ZoomOut.Size = new System.Drawing.Size(44, 43);
             this.ZoomOut.TabIndex = 4;
@@ -117,7 +126,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(402, 28);
+            this.label1.Location = new System.Drawing.Point(441, 28);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(37, 13);
             this.label1.TabIndex = 5;
@@ -142,6 +151,7 @@
             this.LoadHike.TabIndex = 7;
             this.LoadHike.Text = "Load Hike from PC";
             this.LoadHike.UseVisualStyleBackColor = true;
+            this.LoadHike.Click += new System.EventHandler(this.LoadHike_Click);
             // 
             // openHikeDialog
             // 
@@ -152,11 +162,115 @@
             // 
             this.saveHikeDialog.Filter = "BackTrack Hike Files (*.hike)|*.hike";
             // 
+            // AddPoint
+            // 
+            this.AddPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.AddPoint.Location = new System.Drawing.Point(538, 77);
+            this.AddPoint.Name = "AddPoint";
+            this.AddPoint.Size = new System.Drawing.Size(65, 44);
+            this.AddPoint.TabIndex = 8;
+            this.AddPoint.Text = " Add \r\nPoint";
+            this.AddPoint.UseVisualStyleBackColor = true;
+            // 
+            // RemovePoint
+            // 
+            this.RemovePoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.RemovePoint.Enabled = false;
+            this.RemovePoint.Location = new System.Drawing.Point(538, 127);
+            this.RemovePoint.Name = "RemovePoint";
+            this.RemovePoint.Size = new System.Drawing.Size(65, 44);
+            this.RemovePoint.TabIndex = 9;
+            this.RemovePoint.Text = "Remove Point";
+            this.RemovePoint.UseVisualStyleBackColor = true;
+            // 
+            // StartPoint
+            // 
+            this.StartPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartPoint.FormattingEnabled = true;
+            this.StartPoint.Location = new System.Drawing.Point(538, 209);
+            this.StartPoint.Name = "StartPoint";
+            this.StartPoint.Size = new System.Drawing.Size(65, 21);
+            this.StartPoint.TabIndex = 10;
+            this.StartPoint.SelectedIndexChanged += new System.EventHandler(this.StartPoint_SelectedIndexChanged);
+            // 
+            // EndPoint
+            // 
+            this.EndPoint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EndPoint.FormattingEnabled = true;
+            this.EndPoint.Location = new System.Drawing.Point(538, 249);
+            this.EndPoint.Name = "EndPoint";
+            this.EndPoint.Size = new System.Drawing.Size(65, 21);
+            this.EndPoint.TabIndex = 11;
+            this.EndPoint.SelectedIndexChanged += new System.EventHandler(this.EndPoint_SelectedIndexChanged);
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(537, 180);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(63, 26);
+            this.label2.TabIndex = 12;
+            this.label2.Text = "Avg Speed \r\n  between ";
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(557, 233);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(25, 13);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "and";
+            // 
+            // AvgSpeed
+            // 
+            this.AvgSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.AvgSpeed.AutoSize = true;
+            this.AvgSpeed.Location = new System.Drawing.Point(545, 273);
+            this.AvgSpeed.Name = "AvgSpeed";
+            this.AvgSpeed.Size = new System.Drawing.Size(45, 13);
+            this.AvgSpeed.TabIndex = 14;
+            this.AvgSpeed.Text = "0 Km/hr";
+            // 
+            // KmHr
+            // 
+            this.KmHr.AutoSize = true;
+            this.KmHr.Checked = true;
+            this.KmHr.Location = new System.Drawing.Point(537, 289);
+            this.KmHr.Name = "KmHr";
+            this.KmHr.Size = new System.Drawing.Size(54, 17);
+            this.KmHr.TabIndex = 15;
+            this.KmHr.TabStop = true;
+            this.KmHr.Text = "Km/hr";
+            this.KmHr.UseVisualStyleBackColor = true;
+            this.KmHr.CheckedChanged += new System.EventHandler(this.KmHr_CheckedChanged);
+            // 
+            // FtMin
+            // 
+            this.FtMin.AutoSize = true;
+            this.FtMin.Location = new System.Drawing.Point(537, 312);
+            this.FtMin.Name = "FtMin";
+            this.FtMin.Size = new System.Drawing.Size(55, 17);
+            this.FtMin.TabIndex = 16;
+            this.FtMin.TabStop = true;
+            this.FtMin.Text = "Ft/min";
+            this.FtMin.UseVisualStyleBackColor = true;
+            // 
             // BackTrack
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(576, 379);
+            this.ClientSize = new System.Drawing.Size(615, 379);
+            this.Controls.Add(this.FtMin);
+            this.Controls.Add(this.KmHr);
+            this.Controls.Add(this.AvgSpeed);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.EndPoint);
+            this.Controls.Add(this.StartPoint);
+            this.Controls.Add(this.RemovePoint);
+            this.Controls.Add(this.AddPoint);
             this.Controls.Add(this.LoadHike);
             this.Controls.Add(this.SaveHike);
             this.Controls.Add(this.label1);
@@ -165,6 +279,7 @@
             this.Controls.Add(this.MainMap);
             this.Controls.Add(this.clearSDCard);
             this.Controls.Add(this.ReadData);
+            this.MinimumSize = new System.Drawing.Size(600, 220);
             this.Name = "BackTrack";
             this.Text = "BackTrack - The Software!";
             this.ResumeLayout(false);
@@ -186,6 +301,15 @@
         private System.Windows.Forms.Button LoadHike;
         private System.Windows.Forms.OpenFileDialog openHikeDialog;
         private System.Windows.Forms.SaveFileDialog saveHikeDialog;
+        private System.Windows.Forms.Button AddPoint;
+        private System.Windows.Forms.Button RemovePoint;
+        private System.Windows.Forms.ComboBox StartPoint;
+        private System.Windows.Forms.ComboBox EndPoint;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label AvgSpeed;
+        private System.Windows.Forms.RadioButton KmHr;
+        private System.Windows.Forms.RadioButton FtMin;
         //GMapOverlay test
     }
 }

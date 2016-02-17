@@ -204,7 +204,7 @@ namespace BackTrack
             //ReadDrive("E:\\", 32);                    //This must be ran as admin
             //sdAddr = ReadDrive("\\\\.\\physicaldrive1", 32);     //this does not
                 //this workaround no longer works
-            bool error = false;
+            
             sdAddr = ReadDrive(drive, 32);
             int shift = 5;
 
@@ -304,17 +304,18 @@ namespace BackTrack
 
         private void AddPointsToMap()
         {
-            if(Points == null)
+            //remove old points
+            //MainMap.Overlays.Remove(Points);
+            ClearMap();
+
+            if (Points == null)
             {
                 Points = new GMapOverlay();
             }
             if(Route == null)
             {
                 Route = new GMapOverlay();
-            }
-
-            //remove old points
-            MainMap.Overlays.Remove(Points);
+            }            
 
             //add route
             Route.Routes.Add(new GMapRoute("Route1"));
@@ -359,60 +360,13 @@ namespace BackTrack
                 GMapMarker Marker = new GMap.NET.WindowsForms.Markers.GMarkerGoogle(pos, GMap.NET.WindowsForms.Markers.GMarkerGoogleType.green);
                 //Marker.ToolTip = new GMapToolTip(Marker);
 
-                //figure out distance hiked
-                ////double distanceHiked = 0;
-                //if( i != hike.Length - 1)
-                //{
-                //    lastLat = lat - lastLat;
-                //    if(lastLat < 0)
-                //    {
-                //        lastLat *= -1;
-                //    }
-                //    lastLon = lon - lastLon;
-                //    if(lastLon < 0)
-                //    {
-                //        lastLon *= -1;
-                //    }
-                //    //lastLat and lastLon hold the x and y distance traveled
-
-                //    lastLat *= lastLat;
-                //    lastLon *= lastLon;
-
-                //    hike[i].distancedHiked = Math.Sqrt(lastLat + lastLon);
-                    
-                //    //convert to kelometers
-                //    hike[i].distancedHiked *= (10000 / 90);
-
-                //    //add distance hoked before this point
-                //    hike[i].distancedHiked += hike[i + 1].distancedHiked;
-                //}
-                //else
-                //{
-                //    hike[i].distancedHiked = 0;
-                //}
-                //lastLat = lat;
-                //lastLon = lon;
-
                 //figure out time hiked
-                int hours, minutes, seconds;
-                seconds = (hike[i].capTime.seconds - hike[hike.Length-1].capTime.seconds);
-                minutes = (hike[i].capTime.minutes - hike[hike.Length-1].capTime.minutes);
-                hours = (hike[i].capTime.hours - hike[hike.Length-1].capTime.hours);
-                if (seconds < 0)
-                {
-                    seconds = seconds + 60;
-                    minutes--;
-                }
-                if(minutes < 0)
-                {
-                    minutes = minutes + 60;
-                    hours--;
-                }
+                time hikeTime = calcHikeTime(hike[hike.Length - 1], hike[i]);
 
                 //add tool tip
                 Marker.ToolTipText = "Point Number: " + (hike.Length - i)
                                         + "\nTime: " + hike[i].capTime.hours + ":" + hike[i].capTime.minutes + ":" + hike[i].capTime.seconds + " UTC"
-                                        + "\nTime Hiked: " + hours + ":" + minutes + ":" + seconds
+                                        + "\nTime Hiked: " + hikeTime.hours + ":" + hikeTime.minutes + ":" + hikeTime.seconds
                                         //+ (hike[i].capTime.hours - hike[0].capTime.hours) + ":" + (hike[i].capTime.minutes - hike[0].capTime.minutes) + ":" + (hike[i].capTime.seconds - hike[0].capTime.seconds)
                                         + "\nDistance Hiked: " + hike[i].distancedHiked.ToString("F") + " Km"
                                         + "\nLatitude: " + hike[i].degreeNorthSouth + "º " + hike[i].minuteNorthSouth + "' " + hike[i].northSouth
@@ -420,7 +374,7 @@ namespace BackTrack
 
                 
                 //Marker.IsHitTestVisible = false;      //makes marker unclickable and tool tips wont show up
-                Marker.Tag = i;         //add a tag to identify the marker for later
+                Marker.Tag = (hike.Length - 1) - i;         //add a tag to identify the marker for later
 
                 Points.Markers.Add(Marker);
             }
@@ -432,6 +386,32 @@ namespace BackTrack
             //move the map
             MainMap.Position = new PointLatLng((highLat + lowLat)/2, (highLon + lowLon)/2);
 
+            populateComboBoxes();
+        }
+
+        private time calcHikeTime(LocPoint start, LocPoint fin)
+        {
+            time hikeTime;
+            hikeTime.hours = 0;
+            hikeTime.minutes = 0;
+            hikeTime.seconds = 0;
+
+            //figure out time hiked
+            hikeTime.seconds = (fin.capTime.seconds - start.capTime.seconds);
+            hikeTime.minutes = (fin.capTime.minutes - start.capTime.minutes);
+            hikeTime.hours = (fin.capTime.hours - start.capTime.hours);
+            if (hikeTime.seconds < 0)
+            {
+                hikeTime.seconds = hikeTime.seconds + 60;
+                hikeTime.minutes--;
+            }
+            if (hikeTime.minutes < 0)
+            {
+                hikeTime.minutes = hikeTime.minutes + 60;
+                hikeTime.hours--;
+            }
+
+            return hikeTime;
         }
 
         private double convertGpsToDouble(int degrees, float minutes, char indicator)
@@ -444,6 +424,20 @@ namespace BackTrack
             }
 
             return latLon;
+        }
+
+        private void populateComboBoxes()
+        {
+            int i = 0;
+            while (i < hike.Length)
+            {
+                string value = "Point " + Convert.ToString(i + 1);
+                StartPoint.Items.Add(value);
+                EndPoint.Items.Add(value);
+                i++;
+            }
+            StartPoint.SelectedIndex = 0;
+            EndPoint.SelectedIndex = hike.Length - 1;
         }
 
         /******************************************
@@ -632,9 +626,13 @@ namespace BackTrack
                 Points.Markers.Remove(Marker);
 
                 lastSelected = (int)newMarker.Tag;
+
+                //enable the remove point button
+                RemovePoint.Enabled = true;
             }
             else
             {
+                RemovePoint.Enabled = false;
                 lastSelected = -1;
             }
 
@@ -662,6 +660,133 @@ namespace BackTrack
             {
                 //not a valid file
             }
+        }
+
+        private void LoadHike_Click(object sender, EventArgs e)
+        {
+            if(openHikeDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    System.IO.StreamReader sr = new System.IO.StreamReader(openHikeDialog.FileName);
+                    //(System.IO.FileStream)saveHikeDialog.OpenFile());
+
+                    //clear the current hike
+                    ClearMap();
+                    int count = 0;
+                    while (sr.ReadLine() != null)
+                        count++;
+                    hike = new LocPoint[count];
+                    MainMap.Refresh();
+
+                    //load points into hike variable
+                    string line;
+                    string[] lineParts = new string[11];
+                    sr.DiscardBufferedData();
+                    sr.BaseStream.Seek(0, SeekOrigin.Begin);
+                    count = 0;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        lineParts = line.Split(',');
+                        hike[count].degreeNorthSouth = Convert.ToInt32(lineParts[0]);
+                        hike[count].minuteNorthSouth = Convert.ToSingle(lineParts[1]);
+                        hike[count].northSouth = Convert.ToChar(lineParts[2]);
+                        hike[count].degreeEastWest = Convert.ToInt32(lineParts[3]);
+                        hike[count].minuteEastWest = Convert.ToSingle(lineParts[4]);
+                        hike[count].eastWest = Convert.ToChar(lineParts[5]);
+                        hike[count].elevation = Convert.ToInt32(lineParts[6]);
+                        hike[count].capTime.hours = Convert.ToInt32(lineParts[7]);
+                        hike[count].capTime.minutes = Convert.ToInt32(lineParts[8]);
+                        hike[count].capTime.seconds = Convert.ToInt32(lineParts[9]);
+                        hike[count].distancedHiked = Convert.ToDouble(lineParts[10]);
+
+                        count++;
+                    }
+
+                    //put points on the map
+                    AddPointsToMap();
+                    MainMap.Refresh();
+
+                    //allow the user to save hikes
+                    SaveHike.Enabled = true;
+                }
+                catch
+                {
+                    //error opening file
+                    MessageBox.Show("Error opening file", "Error");
+                }
+            }
+            else
+            {
+                //not a valid file
+            }
+        }
+
+        private void ClearMap()
+        {
+            if (Points != null)
+            {
+                MainMap.Overlays.Remove(Points);
+                Points.Markers.Clear();
+            }
+            if (Route != null)
+            {
+                MainMap.Overlays.Remove(Route);
+                Route.Routes.Clear();
+            }
+
+            //clear last selected
+            lastSelected = -1;
+        }
+
+        private void StartPoint_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            calcAvgSpeed();
+        }
+
+        private void EndPoint_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            calcAvgSpeed();
+        }
+
+        private void calcAvgSpeed()
+        {
+            int endIndex = (hike.Length - 1) - EndPoint.SelectedIndex;
+            int startIndex = (hike.Length - 1) - StartPoint.SelectedIndex;
+
+            if ((EndPoint.SelectedIndex >= 0) & (StartPoint.SelectedIndex >= 0))
+            {
+                time hikeTime = calcHikeTime(hike[startIndex], hike[endIndex]);
+
+                float hours = hikeTime.seconds;
+                hours /= 60;
+                hours += hikeTime.minutes;
+                hours /= 60;
+                hours += hikeTime.hours;
+
+                double minutes = hikeTime.seconds;
+                minutes /= 60;
+                minutes += (hikeTime.hours * 60) + hikeTime.minutes;
+
+                double dist = hike[endIndex].distancedHiked - hike[startIndex].distancedHiked;
+
+                if (KmHr.Checked)
+                {
+                    double speed = dist / hours;
+                    AvgSpeed.Text = speed.ToString("F") + " Km/hr";
+                }
+                else
+                {
+                    double speed = dist * 3280.8;
+                    speed /= minutes;
+                    AvgSpeed.Text = speed.ToString("F") + " Ft/min";
+                }
+            }
+        }
+
+        private void KmHr_CheckedChanged(object sender, EventArgs e)
+        {
+            calcAvgSpeed();
         }
     }
 }
