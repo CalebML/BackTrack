@@ -171,6 +171,7 @@
             this.AddPoint.TabIndex = 8;
             this.AddPoint.Text = " Add \r\nPoint";
             this.AddPoint.UseVisualStyleBackColor = true;
+            this.AddPoint.Click += new System.EventHandler(this.AddPoint_Click);
             // 
             // RemovePoint
             // 

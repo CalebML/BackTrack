@@ -30,6 +30,9 @@ namespace BackTrack
         //data for the hike
         LocPoint[] hike;
 
+        //custom cursor
+        Cursor RedPoint;
+
         //function import (setting up "CreateFile")
         [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern SafeFileHandle CreateFile(
@@ -40,6 +43,17 @@ namespace BackTrack
                 [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
                 int flags,
                 IntPtr template);
+
+        //custom cursor stuff
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
+
+
+        const int IMAGE_CURSOR = 2;
+        const uint LR_LOADFROMFILE = 0x00000010;
+        //IntPtr ipImage = 
+
+        //Cursor.Current = testCursor;
 
         //struct so it's built on the stack
         public struct time
@@ -164,6 +178,17 @@ namespace BackTrack
             GMapRoute route = new GMapRoute(points, "test");
             test.Routes.Add(route);
             ****************************************/
+
+            //set up cursor
+            //RedPoint = new Cursor("Red_Point.cur");
+            RedPoint = new Cursor(LoadImage(IntPtr.Zero,
+                                                @"Red_Point.cur",
+                                                IMAGE_CURSOR,
+                                                0,
+                                                0,
+                                                LR_LOADFROMFILE));
+
+
         }
 
         private string GetSDDriveNum()
@@ -428,16 +453,27 @@ namespace BackTrack
 
         private void populateComboBoxes()
         {
-            int i = 0;
-            while (i < hike.Length)
+            //clear items in startand end point
+            StartPoint.Items.Clear();
+            EndPoint.Items.Clear();
+
+            if (hike != null)
             {
-                string value = "Point " + Convert.ToString(i + 1);
-                StartPoint.Items.Add(value);
-                EndPoint.Items.Add(value);
-                i++;
+                int i = 0;
+                while (i < hike.Length)
+                {
+                    string value = "Point " + Convert.ToString(i + 1);
+                    StartPoint.Items.Add(value);
+                    EndPoint.Items.Add(value);
+                    i++;
+                }
+
+                if (hike.Length > 0)
+                {
+                    StartPoint.SelectedIndex = 0;
+                    EndPoint.SelectedIndex = hike.Length - 1;
+                }
             }
-            StartPoint.SelectedIndex = 0;
-            EndPoint.SelectedIndex = hike.Length - 1;
         }
 
         /******************************************
@@ -805,11 +841,11 @@ namespace BackTrack
                     LocPoint[] newHike = new LocPoint[hike.Length - 1];
                     for (int i = 0; i < hike.Length; i++)
                     {
-                        if ( (i != lastSelected) & (pastPointBeingRemoved == false) )
+                        if ( (i != (hike.Length - 1) - lastSelected) & (pastPointBeingRemoved == false) )
                         {
                             newHike[i] = hike[i];
                         }
-                        else if (i == lastSelected)
+                        else if (i == (hike.Length - 1) - lastSelected)
                         {
                             pastPointBeingRemoved = true;
                         }
@@ -826,6 +862,169 @@ namespace BackTrack
                     MainMap.Refresh();
 
                 }
+            }
+        }
+
+        private void AddPoint_Click(object sender, EventArgs e)
+        {
+            MainMap.Cursor = RedPoint;
+            //MainMap.Cursor = Cursors.Hand;
+            //MainMap.Cursor = new Cursor(path);
+
+            MainMap.MouseClick += new MouseEventHandler(MainMap_MouseClick);
+
+            //gray out all buttons here and change add to cancel?
+            ToggleButtons();
+
+        }
+
+        //class level to save across multiple calls
+        bool toggled = false;
+        bool readSD = true,
+            clearSD = false,
+            readPC = true,
+            writePC = false,
+            removePoint = false,
+            addPoint = true;
+
+        private void ToggleButtons()
+        {
+            if (!toggled)
+            {
+                //save button states
+                readSD = ReadData.Enabled;
+                clearSD = clearSDCard.Enabled;
+                readPC = LoadHike.Enabled;
+                writePC = SaveHike.Enabled;
+                removePoint = RemovePoint.Enabled;
+                addPoint = AddPoint.Enabled;
+
+                //disable all
+                ReadData.Enabled = false;
+                clearSDCard.Enabled = false;
+                LoadHike.Enabled = false;
+                SaveHike.Enabled = false;
+                RemovePoint.Enabled = false;
+                AddPoint.Enabled = false;
+
+                toggled = true;
+            }
+            else
+            {
+                ReadData.Enabled = readSD;
+                clearSDCard.Enabled = clearSD;
+                LoadHike.Enabled = readPC;
+                SaveHike.Enabled = writePC;
+                RemovePoint.Enabled = removePoint;
+                AddPoint.Enabled = addPoint;
+
+                toggled = false;
+            }
+        }
+
+        private void MainMap_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                //change curser back
+                MainMap.Cursor = Cursors.Default;
+
+                //get click location
+                double lat = MainMap.FromLocalToLatLng(e.X, e.Y).Lat;
+                double lng = MainMap.FromLocalToLatLng(e.X, e.Y).Lng;
+
+                //delete MouseEventHandler
+                //MouseEventHandler.Remove(MainMap_MouseClick, MainMap_MouseClick);
+                MainMap.MouseClick -= new MouseEventHandler(MainMap_MouseClick);
+
+                //add point to map
+                LocPoint[] newHike;
+                if(hike != null)
+                    newHike = new LocPoint[hike.Length + 1];
+                else
+                    newHike = new LocPoint[1];
+
+                int posToAdd = 0;
+                if (lastSelected == -1)     //if nothing is selected
+                {
+                   /* if (hike != null)
+                        posToAdd = hike.Length;
+                    else*/
+                        posToAdd = 0;
+                }
+                else
+                {
+                    posToAdd = (hike.Length - 1) - lastSelected;
+                }
+
+                bool pastAddedPoint = false;
+                for (int i = 0; i < newHike.Length; i++)
+                {
+                    if ( ((newHike.Length - 1) - i != posToAdd) && (!pastAddedPoint) )
+                        newHike[(newHike.Length - 1) - i] = hike[(hike.Length - 1) - i];
+                    else
+                    {
+                        if (!pastAddedPoint)
+                        {
+                            //setup position in newHike
+                            int pos = (newHike.Length - 1) - i;
+
+                            //put location in newHike
+                            newHike[pos].degreeNorthSouth = (int)lat;
+                            newHike[pos].minuteNorthSouth = (float)((lat - newHike[pos].degreeNorthSouth) * 60);
+                            newHike[pos].degreeEastWest = (int)lng;
+                            newHike[pos].minuteEastWest = (float)((lng - newHike[pos].degreeEastWest) * 60);
+                            newHike[pos].elevation = -1;
+
+                            //fix negitives if they exist
+                            if (newHike[pos].degreeNorthSouth > 0)
+                                newHike[pos].northSouth = 'N';
+                            else
+                            {
+                                newHike[pos].northSouth = 'S';
+                                newHike[pos].degreeNorthSouth *= -1;
+                                newHike[pos].minuteNorthSouth *= -1;
+                            }
+
+                            if (newHike[pos].degreeEastWest > 0)
+                                newHike[pos].eastWest = 'E';
+                            else
+                            {
+                                newHike[pos].eastWest = 'W';
+                                newHike[pos].degreeEastWest *= -1;
+                                newHike[pos].minuteEastWest *= -1;
+                            }
+
+                            //set time equal to point before if possable
+                            if(hike != null)
+                            {
+                                //if there is a point before this one
+                                if(pos != newHike.Length)
+                                {
+                                    newHike[pos].capTime.hours = newHike[pos + 1].capTime.hours;
+                                    newHike[pos].capTime.minutes = newHike[pos + 1].capTime.minutes;
+                                    newHike[pos].capTime.seconds = newHike[pos + 1].capTime.seconds;
+                                }
+                            }
+
+                            //mark pastAddedPoint
+                            pastAddedPoint = true;
+                        }
+                        else
+                        {
+                            newHike[(newHike.Length - 1) - i] = hike[hike.Length - i];
+                        }
+                    }
+                }
+
+                //switch hike to newHike
+                hike = newHike;
+                ClearMap();
+                AddPointsToMap();
+                MainMap.Refresh();
+
+                //toggle buttons back
+                ToggleButtons();
             }
         }
     }
