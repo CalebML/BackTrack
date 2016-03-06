@@ -137,6 +137,7 @@ namespace BackTrack
 
             try
             {
+                //try to access internet
                 System.Net.IPHostEntry e =
                      System.Net.Dns.GetHostEntry("www.google.com");
             }
@@ -157,39 +158,17 @@ namespace BackTrack
             MainMap.Zoom = 11;
 
             MainMap.OnMarkerClick += new MarkerClick(MarkerClick);
-            //MainMap.OnMarkerEnter += new MarkerEnter(MainMap_OnMarkerEnter);
-            //MainMap.OnMarkerLeave += new MarkerLeave(MainMap_OnMarkerLeave);
 
-            /**************************************
-            GMapOverlay test = new GMapOverlay();
-            PointLatLng[] points = new PointLatLng[2];
-            points[0].Lat = 45.604590;
-            points[0].Lng = -122.807256;
-
-            points[1].Lat = 45.604590;
-            points[1].Lng = -122.807;
-
-            test.Markers.Add(new GMap.NET.WindowsForms.Markers.GMarkerGoogle(points[0], GMap.NET.WindowsForms.Markers.GMarkerGoogleType.green));
-            test.Markers.Add(new GMap.NET.WindowsForms.Markers.GMarkerGoogle(points[1], GMap.NET.WindowsForms.Markers.GMarkerGoogleType.green));
-            MainMap.Overlays.Add(test);
-
-
-            //MapRoute route = new MapRoute(test.Markers.GetEnumerator(), "test");
-            GMapRoute route = new GMapRoute(points, "test");
-            test.Routes.Add(route);
-            ****************************************/
 
             //set up cursor
-            //RedPoint = new Cursor("Red_Point.cur");
             RedPoint = new Cursor(LoadImage(IntPtr.Zero,
                                                 @"Red_Point.cur",
                                                 IMAGE_CURSOR,
                                                 0,
                                                 0,
                                                 LR_LOADFROMFILE));
-
-
         }
+
 
         private string GetSDDriveNum()
         {
